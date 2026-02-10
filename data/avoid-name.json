@@ -1,0 +1,417 @@
+[
+    {
+        "key": "上梁",
+        "name_en": "Raising the Beam",
+        "name_zh": "上梁"
+    },
+    {
+        "key": "乘船",
+        "name_en": "Boarding a Vessel",
+        "name_zh": "乘船"
+    },
+    {
+        "key": "买房",
+        "name_en": "Property Acquisition",
+        "name_zh": "置产"
+    },
+    {
+        "key": "买衣服",
+        "name_en": "Tailoring",
+        "name_zh": "裁衣"
+    },
+    {
+        "key": "买车",
+        "name_en": "Vehicle Purchase",
+        "name_zh": "造车器"
+    },
+    {
+        "key": "交易",
+        "name_en": "Trading",
+        "name_zh": "交易"
+    },
+    {
+        "key": "伐木",
+        "name_en": "Lumbering",
+        "name_zh": "伐木"
+    },
+    {
+        "key": "会亲友",
+        "name_en": "Socializing",
+        "name_zh": "会亲友"
+    },
+    {
+        "key": "作梁",
+        "name_en": "Building Beams",
+        "name_zh": "作梁"
+    },
+    {
+        "key": "作灶",
+        "name_en": "Setting the Hearth",
+        "name_zh": "作灶"
+    },
+    {
+        "key": "修坟",
+        "name_en": "Tomb Repair",
+        "name_zh": "修坟"
+    },
+    {
+        "key": "修造",
+        "name_en": "Renovation",
+        "name_zh": "修造"
+    },
+    {
+        "key": "入殓",
+        "name_en": "Encoffining",
+        "name_zh": "入殓"
+    },
+    {
+        "key": "出火",
+        "name_en": "Moving the Altar",
+        "name_zh": "出火"
+    },
+    {
+        "key": "出行",
+        "name_en": "Travel",
+        "name_zh": "出行"
+    },
+    {
+        "key": "出货财",
+        "name_en": "Releasing Assets",
+        "name_zh": "出货财"
+    },
+    {
+        "key": "分居",
+        "name_en": "Establishing Households",
+        "name_zh": "分居"
+    },
+    {
+        "key": "动土",
+        "name_en": "Breaking Ground",
+        "name_zh": "动土"
+    },
+    {
+        "key": "合婚订婚",
+        "name_en": "Engagement",
+        "name_zh": "纳采"
+    },
+    {
+        "key": "合寿木",
+        "name_en": "Preparing Caskets",
+        "name_zh": "合寿木"
+    },
+    {
+        "key": "合嵴",
+        "name_en": "Ridgepole Setting",
+        "name_zh": "合嵴"
+    },
+    {
+        "key": "合帐",
+        "name_en": "Setting Curtains",
+        "name_zh": "合帐"
+    },
+    {
+        "key": "塑绘",
+        "name_en": "Sculpting & Painting",
+        "name_zh": "塑绘"
+    },
+    {
+        "key": "塞穴",
+        "name_en": "Sealing Leaks",
+        "name_zh": "塞穴"
+    },
+    {
+        "key": "安床",
+        "name_en": "Setting the Bed",
+        "name_zh": "安床"
+    },
+    {
+        "key": "安葬",
+        "name_en": "Burial",
+        "name_zh": "安葬"
+    },
+    {
+        "key": "安装器具",
+        "name_en": "Installing Appliances",
+        "name_zh": "安装器具"
+    },
+    {
+        "key": "安门",
+        "name_en": "Setting the Gate",
+        "name_zh": "安门"
+    },
+    {
+        "key": "安香",
+        "name_en": "Enshrining Incense",
+        "name_zh": "安香"
+    },
+    {
+        "key": "定磉",
+        "name_en": "Foundation Stone",
+        "name_zh": "定磉"
+    },
+    {
+        "key": "开业",
+        "name_en": "Business Opening",
+        "name_zh": "开市"
+    },
+    {
+        "key": "开仓",
+        "name_en": "Opening Granary",
+        "name_zh": "开仓"
+    },
+    {
+        "key": "开光",
+        "name_en": "Consecration",
+        "name_zh": "开光"
+    },
+    {
+        "key": "开厕",
+        "name_en": "Building Latrine",
+        "name_zh": "开厕"
+    },
+    {
+        "key": "开池",
+        "name_en": "Opening Ponds",
+        "name_zh": "开池"
+    },
+    {
+        "key": "开渠",
+        "name_en": "Opening Channels",
+        "name_zh": "开渠"
+    },
+    {
+        "key": "开生坟",
+        "name_en": "Preparing Future Tomb",
+        "name_zh": "开生坟"
+    },
+    {
+        "key": "成人礼",
+        "name_en": "Coming of Age",
+        "name_zh": "冠笄"
+    },
+    {
+        "key": "成服",
+        "name_en": "Donning Mourning Dress",
+        "name_zh": "成服"
+    },
+    {
+        "key": "房屋清洁",
+        "name_en": "House Cleaning",
+        "name_zh": "扫舍"
+    },
+    {
+        "key": "打鱼",
+        "name_en": "Fishing",
+        "name_zh": "打鱼"
+    },
+    {
+        "key": "挂匾",
+        "name_en": "Hanging Plaque",
+        "name_zh": "挂匾"
+    },
+    {
+        "key": "掘井",
+        "name_en": "Digging a Well",
+        "name_zh": "掘井"
+    },
+    {
+        "key": "探病",
+        "name_en": "Visiting the Sick",
+        "name_zh": "探病"
+    },
+    {
+        "key": "搬家",
+        "name_en": "Moving",
+        "name_zh": "移徙"
+    },
+    {
+        "key": "搬新房",
+        "name_en": "Housewarming",
+        "name_zh": "入宅"
+    },
+    {
+        "key": "收养子女",
+        "name_en": "Adoption",
+        "name_zh": "进人口"
+    },
+    {
+        "key": "斋醮",
+        "name_en": "Ritual Offerings",
+        "name_zh": "斋醮"
+    },
+    {
+        "key": "无",
+        "name_en": "No Major Action",
+        "name_zh": "诸事不宜"
+    },
+    {
+        "key": "架马",
+        "name_en": "Scaffolding",
+        "name_zh": "架马"
+    },
+    {
+        "key": "栽种",
+        "name_en": "Planting",
+        "name_zh": "栽种"
+    },
+    {
+        "key": "求职入学",
+        "name_en": "Career/Education",
+        "name_zh": "入学"
+    },
+    {
+        "key": "治病",
+        "name_en": "Medical Treatment",
+        "name_zh": "治病"
+    },
+    {
+        "key": "牧养",
+        "name_en": "Herding",
+        "name_zh": "牧养"
+    },
+    {
+        "key": "理发",
+        "name_en": "Haircutting",
+        "name_zh": "理发"
+    },
+    {
+        "key": "盖屋",
+        "name_en": "Roofing",
+        "name_zh": "盖屋"
+    },
+    {
+        "key": "破土",
+        "name_en": "Breaking Earth (Tomb)",
+        "name_zh": "破土"
+    },
+    {
+        "key": "祈福",
+        "name_en": "Praying for Blessings",
+        "name_zh": "祈福"
+    },
+    {
+        "key": "祭祀",
+        "name_en": "Worship/Offering",
+        "name_zh": "祭祀"
+    },
+    {
+        "key": "移柩",
+        "name_en": "Moving Casket",
+        "name_zh": "移柩"
+    },
+    {
+        "key": "立碑",
+        "name_en": "Erecting Monument",
+        "name_zh": "立碑"
+    },
+    {
+        "key": "竖柱",
+        "name_en": "Erecting Pillars",
+        "name_zh": "竖柱"
+    },
+    {
+        "key": "签订合同",
+        "name_en": "Signing Contracts",
+        "name_zh": "立券"
+    },
+    {
+        "key": "纳畜",
+        "name_en": "Buying Livestock",
+        "name_zh": "纳畜"
+    },
+    {
+        "key": "纳财",
+        "name_en": "Receiving Wealth",
+        "name_zh": "纳财"
+    },
+    {
+        "key": "结婚",
+        "name_en": "Marriage",
+        "name_zh": "嫁娶"
+    },
+    {
+        "key": "行丧",
+        "name_en": "Funeral Procession",
+        "name_zh": "行丧"
+    },
+    {
+        "key": "补垣",
+        "name_en": "Mending Walls",
+        "name_zh": "补垣"
+    },
+    {
+        "key": "订盟",
+        "name_en": "Strategic Alliance",
+        "name_zh": "订盟"
+    },
+    {
+        "key": "诉讼",
+        "name_en": "Litigation",
+        "name_zh": "诉讼"
+    },
+    {
+        "key": "诸事不宜",
+        "name_en": "Avoid All Actions",
+        "name_zh": "诸事不宜"
+    },
+    {
+        "key": "谢土",
+        "name_en": "Gratitude Ceremony",
+        "name_zh": "谢土"
+    },
+    {
+        "key": "赴任",
+        "name_en": "Taking Office",
+        "name_zh": "赴任"
+    },
+    {
+        "key": "起基",
+        "name_en": "Foundation Work",
+        "name_zh": "起基"
+    },
+    {
+        "key": "迁坟",
+        "name_en": "Moving Graves",
+        "name_zh": "迁坟"
+    },
+    {
+        "key": "造庙",
+        "name_en": "Building Temples",
+        "name_zh": "造庙"
+    },
+    {
+        "key": "造桥",
+        "name_en": "Building Bridges",
+        "name_zh": "造桥"
+    },
+    {
+        "key": "造畜稠",
+        "name_en": "Building Animal Pens",
+        "name_zh": "造畜稠"
+    },
+    {
+        "key": "造船",
+        "name_en": "Building Ships",
+        "name_zh": "造船"
+    },
+    {
+        "key": "针灸",
+        "name_en": "Precision Work",
+        "name_zh": "经络"
+    },
+    {
+        "key": "问名",
+        "name_en": "Identity Inquiry",
+        "name_zh": "问名"
+    },
+    {
+        "key": "除服",
+        "name_en": "Ending Mourning",
+        "name_zh": "除服"
+    },
+    {
+        "key": "馀事勿取",
+        "name_en": "Avoid Other Actions",
+        "name_zh": "馀事勿取"
+    }
+]

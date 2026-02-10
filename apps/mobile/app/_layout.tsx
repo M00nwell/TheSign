@@ -1,6 +1,7 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
@@ -27,13 +28,14 @@ export default function Layout() {
     useEffect(() => {
         if (!initialized) return;
 
-        const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
+        // Bypass login for now
+        // const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
 
-        if (!session && !inAuthGroup) {
-            router.replace('/login');
-        } else if (session && inAuthGroup) {
-            router.replace('/');
-        }
+        // if (!session && !inAuthGroup) {
+        //     router.replace('/login');
+        // } else if (session && inAuthGroup) {
+        //     router.replace('/');
+        // }
     }, [session, segments, initialized]);
 
     if (!initialized) {
@@ -44,5 +46,9 @@ export default function Layout() {
         );
     }
 
-    return <Slot />;
+    return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <Slot />
+        </GestureHandlerRootView>
+    );
 }
