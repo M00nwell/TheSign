@@ -1,0 +1,25 @@
+{
+    "cli": {
+        "version": ">= 3.0.0",
+        "appVersionSource": "local"
+    },
+    "build": {
+        "development": {
+            "developmentClient": true,
+            "distribution": "internal"
+        },
+        "preview": {
+            "distribution": "internal"
+        },
+        "production": {}
+    },
+    "submit": {
+        "production": {
+            "ios": {
+                "ascAppId": "6759099643",
+                "appleId": "PeaceBlvdGames@gmail.com",
+                "bundleIdentifier": "com.thesign.app"
+            }
+        }
+    }
+}

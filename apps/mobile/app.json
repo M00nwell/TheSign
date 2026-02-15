@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "The Sign",
+    "slug": "the-sign-mobile",
     "version": "1.0.0",
     "scheme": "the-sign",
     "orientation": "portrait",
@@ -14,13 +14,20 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thesign.app",
+      "ascAppId": "6759099643",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "appleTeamId": "7KSK5QLDBW"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.thesign.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -30,6 +37,12 @@
     "plugins": [
       "expo-web-browser",
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "06fb859f-3f88-4c4b-990d-ea01fc211d0b"
+      }
+    }
   }
 }

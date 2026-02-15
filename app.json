@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "a923e3ec-0ad3-4878-bc4f-6d543be9825d"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.fuwenzhe.thesignmonorepo",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
