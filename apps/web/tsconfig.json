@@ -1,12 +1,16 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
-    "moduleResolution": "Bundler", // <--- 1. Change this to 'Bundler'
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "next/server": [
+        "../../node_modules/next/server"
       ]
     },
     "plugins": [

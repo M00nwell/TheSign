@@ -2,7 +2,6 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-    // 1. Create the response first
     let supabaseResponse = NextResponse.next({
         request,
     })
@@ -16,11 +15,8 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    // 2. Correctly sync cookies to both the request AND the response
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        request.cookies.set(name, value)
-                    )
-                    // Update the response with the new cookies
+                    // Update both request and response to keep them in sync
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
                     cookiesToSet.forEach(({ name, value, options }) =>
                         supabaseResponse.cookies.set(name, value, options)
                     )
@@ -29,16 +25,11 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // IMPORTANT: Validates the session. If the user is logged in, it refreshes the token.
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    // Using the modern v2 destructuring pattern
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // 3. Optional: Add your redirect logic here
-    const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
-        request.nextUrl.pathname.startsWith('/auth')
-
-    if (!user && !isAuthPage) {
+    // Redirect logic for Alpha testers
+    if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth')) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)

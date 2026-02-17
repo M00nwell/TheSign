@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
-export async function login(prevState: any, formData: FormData) {
+interface AuthActionState {
+    error?: string
+    message?: string
+    success?: boolean
+}
+
+export async function login(prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -21,7 +27,7 @@ export async function login(prevState: any, formData: FormData) {
     return { success: true }
 }
 
-export async function signup(prevState: any, formData: FormData) {
+export async function signup(prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
     const supabase = await createClient()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
