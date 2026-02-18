@@ -57,7 +57,9 @@ const toChineseLunarDay = (d: number) => {
     return chineseDays[d] || d.toString();
 }
 
-const API_URL = 'http://192.168.0.17:3000/api/daily-omen'; // Ensure this matches your local IP
+const DEV_API = 'http://192.168.0.17:3000/api/daily-omen'; // Ensure this matches your local IP
+const PROD_API = 'https://www.thedailysign.com/api/daily-omen';
+const API_URL = PROD_API;
 
 // Module-level deduplication
 let activeFetchPromise: Promise<OmenData | null> | null = null;
@@ -148,7 +150,18 @@ export default function OmenCard({ language }: OmenCardProps) {
                 }
 
                 activeFetchPromise = fetch(API_URL, { headers })
-                    .then(res => res.json())
+                    .then(async res => {
+                        if (!res.ok) {
+                            const text = await res.text();
+                            throw new Error(`Server returned ${res.status}: ${text.slice(0, 100)}`);
+                        }
+                        const contentType = res.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            const text = await res.text();
+                            throw new Error(`Expected JSON but got ${contentType}: ${text.slice(0, 100)}`);
+                        }
+                        return res.json();
+                    })
                     .then(data => data as OmenData)
                     .catch(err => {
                         console.error("Fetch error:", err);
