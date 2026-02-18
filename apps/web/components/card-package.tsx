@@ -87,7 +87,7 @@ export default function CardPackage({ children }: CardPackageProps) {
                 onSuccess={handleLoginSuccess}
             />
             {/* Background glow meant to be behind the package */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-purple-500/20 to-blue-500/20 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle,rgba(168,85,247,0.2)_0%,rgba(59,130,246,0.2)_50%,transparent_70%)] pointer-events-none" />
 
             {/* 1. The Omen Card (Underlying Content) */}
             <div className={`absolute inset-0 z-10 transition-all duration-700 ease-out ${status === 'opening' ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
