@@ -8,8 +8,9 @@ import { getDailyOmen, OmenData } from '../app/actions/get-daily-omen'
 import { useUser } from '@/providers/user-provider'
 
 // Module-level variable to deduplicate fetches (Double-Lock)
-// This prevents React Strict Mode or fast re-mounts from triggering two network requests.
-let activeFetchPromise: Promise<OmenData | null> | null = null;
+// using a map to handle different user contexts (e.g. anon vs logged in)
+// Key: 'anon' or user.id
+let activeFetchPromises: Record<string, Promise<OmenData | null>> = {};
 
 const toChineseLunarMonth = (m: number) => {
     const months = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
@@ -42,7 +43,7 @@ export default function OmenCard() {
     const [omenData, setOmenData] = useState<OmenData | null>(null)
     const [loading, setLoading] = useState(true)
     const [imageError, setImageError] = useState(false)
-    const { language } = useUser()
+    const { language, user } = useUser()
 
     // Animation controls
     const x = useMotionValue(0)
@@ -60,11 +61,13 @@ export default function OmenCard() {
         setLoading(true)
         // Match key generation from useEffect
         const todayKey = new Date().toLocaleDateString('en-CA')
-        const storageKey = `daily-omen-v4-${todayKey}`
+        const userIdSuffix = user?.id ? `-${user.id}` : '-anon'
+        const storageKey = `daily-omen-v4-${todayKey}${userIdSuffix}`
         localStorage.removeItem(storageKey)
 
-        // Reset fetch promise
-        activeFetchPromise = null;
+        // Reset fetch promise for this user
+        const userKey = user?.id || 'anon';
+        delete activeFetchPromises[userKey];
 
         // Reset Animation/State
         rotateY.set(0)
@@ -98,7 +101,10 @@ export default function OmenCard() {
             try {
                 // 1. Check Local Storage
                 const todayKey = new Date().toLocaleDateString('en-CA')
-                const storageKey = `daily-omen-v4-${todayKey}`
+                // Use distinct keys for anonymous vs logged-in users to prevent stale data
+                const userIdSuffix = user?.id ? `-${user.id}` : '-anon'
+                const storageKey = `daily-omen-v4-${todayKey}${userIdSuffix}`
+
                 const cached = localStorage.getItem(storageKey)
 
                 if (cached) {
@@ -108,13 +114,15 @@ export default function OmenCard() {
                 }
 
                 // 2. Fetch if not cached (Deduplicated)
-                if (!activeFetchPromise) {
-                    activeFetchPromise = getDailyOmen().finally(() => {
-                        activeFetchPromise = null
+                const userKey = user?.id || 'anon';
+
+                if (!activeFetchPromises[userKey]) {
+                    activeFetchPromises[userKey] = getDailyOmen().finally(() => {
+                        delete activeFetchPromises[userKey]
                     })
                 }
 
-                const data = await activeFetchPromise
+                const data = await activeFetchPromises[userKey]
 
                 if (data) {
                     localStorage.setItem(storageKey, JSON.stringify(data))
@@ -127,7 +135,7 @@ export default function OmenCard() {
             }
         }
         loadOmen()
-    }, [])
+    }, [user?.id])
 
     const handleDragEnd = (event: any, info: PanInfo) => {
         const threshold = 100

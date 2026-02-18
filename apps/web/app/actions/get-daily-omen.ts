@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { headers } from 'next/headers'
 
 export interface OmenContent {
     text: string;
@@ -26,6 +27,7 @@ export interface OmenData {
 // Simple Seeded Random Number Generator (Linear ConGruential Generator)
 // Removed
 
+
 export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | null> {
     const supabase = await createClient()
 
@@ -33,6 +35,9 @@ export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | 
     const year = date.getFullYear()
     const month = date.getMonth() + 1
     const day = date.getDate()
+
+    // Format date as YYYY-MM-DD for DB storage/lookup (using local time components as intended for almanac)
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
     const { data: almanacData, error: almanacError } = await supabase
         .from('almanac')
@@ -47,107 +52,187 @@ export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | 
         return null
     }
 
-    // 2. Parse Activities
-    const { suit, avoid } = almanacData
-    const activities: { name: string; type: 'suit' | 'avoid' }[] = []
-
-    if (suit) {
-        activities.push(...(suit.split('.') as string[]).filter(Boolean).map((s: string) => ({ name: s, type: 'suit' as const })))
-    }
-    if (avoid) {
-        activities.push(...(avoid.split('.') as string[]).filter(Boolean).map((s: string) => ({ name: s, type: 'avoid' as const })))
+    // Check if user is logged in
+    // Support both Cookie-based auth (Web) and Bearer Token auth (Mobile/API)
+    let token: string | undefined;
+    const headerStore = await headers();
+    const authHeader = headerStore.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.replace('Bearer ', '');
     }
 
-    if (activities.length === 0) return null
+    // getUser() will use the cookie if no token is passed, or the token if passed.
+    // However, createServerClient() instance is already bound to cookies. 
+    // Passing a token to getUser() overrides the client's session context for that call.
+    const { data: { user } } = await supabase.auth.getUser(token)
 
-    // 3. Random Selection of Activity
-    const randomActivity = activities[Math.floor(Math.random() * activities.length)]
+    let existingOmenId: string | null = null
+    let existingActivityKey: string | null = null
+    let existingActivityType: 'suit' | 'avoid' | null = null
 
-    // Safety check
-    if (!randomActivity) return null
+    if (user) {
+        // Check for existing daily omen
+        const { data: dailyOmen } = await supabase
+            .from('user_daily_omens')
+            .select('omen_id, activity_key, activity_type')
+            .eq('user_id', user.id)
+            .eq('date', dateStr)
+            .single()
 
-    // 4. Fetch Omens for the selected activity
-    let omens: any[] = []
-
-    if (randomActivity.type === 'suit') {
-        const { data, error } = await supabase
-            .from('suit_activity_omens')
-            .select(`
-            omen_id,
-            omens (
-                id,
-                omen_translations (
-                    language_code,
-                    omen_text,
-                    explanation
-                ),
-                omen_images (
-                    image_url
-                )
-            )
-        `)
-            .eq('suit_key', randomActivity.name)
-
-        if (data) omens = data.map(d => d.omens).filter(Boolean)
-    } else {
-        const { data, error } = await supabase
-            .from('avoid_activity_omens')
-            .select(`
-            omen_id,
-            omens (
-                id,
-                omen_translations (
-                    language_code,
-                    omen_text,
-                    explanation
-                ),
-                omen_images (
-                    image_url
-                )
-            )
-        `)
-            .eq('avoid_key', randomActivity.name)
-
-        if (data) omens = data.map(d => d.omens).filter(Boolean)
-    }
-
-    // Default fallback structure
-    const fallbackContent: OmenContent = {
-        text: "Omen data unavailable.",
-        explanation: "Please try again later.",
-        activityDisplayName: randomActivity.name
-    }
-
-    // 5. Random Selection of Omen
-    if (!omens || omens.length === 0) {
-        return {
-            content: {
-                en: fallbackContent,
-                zh: fallbackContent
-            },
-            imageUrl: null,
-            activityName: randomActivity.name,
-            type: randomActivity.type,
-            almanac: {
-                gzYear: almanacData.gz_year,
-                lunarMonth: almanacData.lunar_month,
-                lunarDay: almanacData.lunar_day
-            }
+        if (dailyOmen) {
+            existingOmenId = dailyOmen.omen_id
+            existingActivityKey = dailyOmen.activity_key
+            existingActivityType = dailyOmen.activity_type as 'suit' | 'avoid'
         }
     }
 
-    const randomOmen = omens[Math.floor(Math.random() * omens.length)]
-    if (!randomOmen) return null
+    let selectedOmen: any = null
+    let activityName = existingActivityKey
+    let activityType: 'suit' | 'avoid' = existingActivityType || 'suit' // Default, will be overwritten if fresh
+
+    if (existingOmenId) {
+        // Fetch specific omen data
+        const { data: omenData, error } = await supabase
+            .from('omens')
+            .select(`
+                id,
+                omen_translations (
+                    language_code,
+                    omen_text,
+                    explanation
+                ),
+                omen_images (
+                    image_url
+                )
+            `)
+            .eq('id', existingOmenId)
+            .single()
+
+        if (omenData) {
+            selectedOmen = omenData
+        }
+    }
+
+    // If no existing omen found or fetch failed, generate new one
+    if (!selectedOmen) {
+        // 2. Parse Activities
+        const { suit, avoid } = almanacData
+        const activities: { name: string; type: 'suit' | 'avoid' }[] = []
+
+        if (suit) {
+            activities.push(...(suit.split('.') as string[]).filter(Boolean).map((s: string) => ({ name: s, type: 'suit' as const })))
+        }
+        if (avoid) {
+            activities.push(...(avoid.split('.') as string[]).filter(Boolean).map((s: string) => ({ name: s, type: 'avoid' as const })))
+        }
+
+        if (activities.length === 0) return null
+
+        // 3. Random Selection of Activity
+        const randomActivity = activities[Math.floor(Math.random() * activities.length)]
+
+        // Safety check
+        if (!randomActivity) return null
+
+        activityName = randomActivity.name
+        activityType = randomActivity.type
+
+        // 4. Fetch Omens for the selected activity
+        let omens: any[] = []
+
+        if (randomActivity.type === 'suit') {
+            const { data } = await supabase
+                .from('suit_activity_omens')
+                .select(`
+                omen_id,
+                omens (
+                    id,
+                    omen_translations (
+                        language_code,
+                        omen_text,
+                        explanation
+                    ),
+                    omen_images (
+                        image_url
+                    )
+                )
+            `)
+                .eq('suit_key', randomActivity.name)
+
+            if (data) omens = data.map(d => d.omens).filter(Boolean)
+        } else {
+            const { data } = await supabase
+                .from('avoid_activity_omens')
+                .select(`
+                omen_id,
+                omens (
+                    id,
+                    omen_translations (
+                        language_code,
+                        omen_text,
+                        explanation
+                    ),
+                    omen_images (
+                        image_url
+                    )
+                )
+            `)
+                .eq('avoid_key', randomActivity.name)
+
+            if (data) omens = data.map(d => d.omens).filter(Boolean)
+        }
+
+        // 5. Random Selection of Omen
+        if (!omens || omens.length === 0) {
+            // Default fallback structure if NO omens found for activity
+            // ... (Return fallback object logic, see below)
+            // For brevity, using the same fallback content structure
+            const fallbackContent: OmenContent = {
+                text: "Omen data unavailable.",
+                explanation: "Please try again later.",
+                activityDisplayName: randomActivity.name
+            }
+            return {
+                content: {
+                    en: fallbackContent,
+                    zh: fallbackContent
+                },
+                imageUrl: null,
+                activityName: randomActivity.name,
+                type: randomActivity.type,
+                almanac: {
+                    gzYear: almanacData.gz_year,
+                    lunarMonth: almanacData.lunar_month,
+                    lunarDay: almanacData.lunar_day
+                }
+            }
+        }
+
+        selectedOmen = omens[Math.floor(Math.random() * omens.length)]
+
+        // If user is logged in, save this selection!
+        if (user && selectedOmen) {
+            await supabase.from('user_daily_omens').upsert({
+                user_id: user.id,
+                date: dateStr,
+                omen_id: selectedOmen.id,
+                activity_key: activityName,
+                activity_type: activityType
+            }, { onConflict: 'user_id, date' })
+        }
+    }
+
+    if (!selectedOmen) return null
 
     // Extract translations
     // @ts-ignore
-    const translations = randomOmen.omen_translations || []
+    const translations = selectedOmen.omen_translations || []
     const enTrans = translations.find((t: any) => t.language_code === 'en')
     const zhTrans = translations.find((t: any) => t.language_code === 'zh')
 
     // Image logic
     // @ts-ignore
-    const imgs = randomOmen.omen_images
+    const imgs = selectedOmen.omen_images
     let imageUrl = null
     if (Array.isArray(imgs)) {
         imageUrl = imgs[0]?.image_url || null
@@ -156,17 +241,14 @@ export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | 
     }
 
     // 6. Fetch Activity Translations (EN & ZH)
-    // By default, the activity name in DB is often Chinese (e.g. '上梁').
-    // We need 'en' translation for EN mode.
-    // We can use the original name as ZH display name or fetch explicit translation if exists.
-    let enActivityName = randomActivity.name
-    let zhActivityName = randomActivity.name
+    let enActivityName = activityName!
+    let zhActivityName = activityName!
 
-    if (randomActivity.type === 'suit') {
+    if (activityType === 'suit') {
         const { data } = await supabase
             .from('suit_activity_translations')
             .select('name, language_code')
-            .eq('suit_key', randomActivity.name)
+            .eq('suit_key', activityName)
             .in('language_code', ['en', 'zh'])
 
         if (data) {
@@ -179,7 +261,7 @@ export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | 
         const { data } = await supabase
             .from('avoid_activity_translations')
             .select('name, language_code')
-            .eq('avoid_key', randomActivity.name)
+            .eq('avoid_key', activityName)
             .in('language_code', ['en', 'zh'])
 
         if (data) {
@@ -205,13 +287,13 @@ export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | 
             }
         },
         imageUrl,
-        activityName: randomActivity.name,
-        type: randomActivity.type,
+        activityName: activityName!,
+        type: activityType!,
         almanac: {
             gzYear: almanacData.gz_year,
             lunarMonth: almanacData.lunar_month,
             lunarDay: almanacData.lunar_day
         }
     }
-
 }
+

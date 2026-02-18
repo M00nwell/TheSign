@@ -67,6 +67,8 @@ interface OmenCardProps {
 }
 
 
+import { supabase } from '../lib/supabase';
+
 export default function OmenCard({ language }: OmenCardProps) {
     const [omen, setOmen] = useState<OmenData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -122,8 +124,14 @@ export default function OmenCard({ language }: OmenCardProps) {
         try {
             setLoading(true);
 
+            // Get current session for auth token
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            const userId = session?.user?.id ?? 'anon';
+
             const todayKey = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-            const storageKey = `daily-omen-v4-${todayKey}`;
+            // Use distinct keys for anonymous vs logged-in users to prevent stale data
+            const storageKey = `daily-omen-v4-${todayKey}-${userId}`;
 
             const cached = await AsyncStorage.getItem(storageKey);
 
@@ -134,7 +142,12 @@ export default function OmenCard({ language }: OmenCardProps) {
             }
 
             if (!activeFetchPromise) {
-                activeFetchPromise = fetch(API_URL)
+                const headers: HeadersInit = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                activeFetchPromise = fetch(API_URL, { headers })
                     .then(res => res.json())
                     .then(data => data as OmenData)
                     .catch(err => {
