@@ -8,9 +8,10 @@ import { useUser } from '@/providers/user-provider'
 
 interface CardPackageProps {
     children: React.ReactNode
+    onOpen?: () => void
 }
 
-export default function CardPackage({ children }: CardPackageProps) {
+export default function CardPackage({ children, onOpen }: CardPackageProps) {
     const { language, user } = useUser()
     const isAuthenticated = !!user
 
@@ -51,6 +52,7 @@ export default function CardPackage({ children }: CardPackageProps) {
 
     const onTearComplete = () => {
         setStatus('opened')
+        onOpen?.()
     }
 
     const handleLoginSuccess = () => {
@@ -58,6 +60,39 @@ export default function CardPackage({ children }: CardPackageProps) {
         // Auto open after login?
         // Let's just let them interact again.
     }
+
+    // Check if we've already opened the omen for today
+    React.useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const checkOpenedStatus = () => {
+            const todayKey = new Date().toLocaleDateString('en-CA')
+            const userIdSuffix = user?.id ? `-${user.id}` : '-anon'
+            const storageKey = `daily-omen-v4-${todayKey}${userIdSuffix}`
+
+            // If we have data for TODAY, we consider it "opened" (or at least revealed)
+            // But visually, the user might want to see the package again? 
+            // The request is "when new day begins, reset the app to show the card packaging".
+            // This implies if I saw yesterday's omen, effectively I should see a package today.
+            // If I already saw TODAY's omen, usually apps keep it open or let me see it directly.
+            // But let's interpret "reset" as: strictly SHOW PACKAGE if it's a new day (no data for today).
+            // If data for today exists, should we show package or omen?
+            // Usually: 
+            // - No data for today -> Closed Package
+            // - Data for today -> Opened Omen
+
+            const cached = localStorage.getItem(storageKey)
+            if (cached) {
+                setStatus('opened')
+                onOpen?.()
+            } else {
+                setStatus('closed')
+                x.set(0)
+            }
+        }
+
+        checkOpenedStatus()
+    }, [user, x])
 
     const today = new Date()
     const dateString = language === 'zh'

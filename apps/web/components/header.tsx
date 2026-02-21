@@ -1,19 +1,23 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Settings, User, LogIn } from 'lucide-react'
+import { Settings, Share2 } from 'lucide-react'
 import { useUser } from '@/providers/user-provider'
 import ProfileModal from './profile-modal'
 import SettingsModal from './settings-modal'
 import LoginModal from './login-modal'
 
-export default function Header() {
-    const { user, isLoading } = useUser()
+interface HeaderProps {
+    isPackageOpen?: boolean
+    onShare?: () => void
+}
+
+export default function Header({ isPackageOpen = false, onShare }: HeaderProps) {
+    const { user } = useUser()
     const [showProfile, setShowProfile] = useState(false)
     const [showSettings, setShowSettings] = useState(false)
     const [showLogin, setShowLogin] = useState(false)
 
-    // Handle Profile Click
     const handleProfileClick = () => {
         if (!user) {
             setShowLogin(true)
@@ -34,21 +38,34 @@ export default function Header() {
                     <Settings size={20} className="group-hover:rotate-90 transition-transform duration-500" />
                 </button>
 
-                {/* Profile Trigger */}
-                {/* Profile Trigger - Only show if logged in */}
-                {user && (
-                    <button
-                        onClick={handleProfileClick}
-                        className="pointer-events-auto group relative"
-                        aria-label="Profile"
-                    >
-                        <div className="p-3 bg-black/20 backdrop-blur-md rounded-full text-white/70 hover:text-white border border-white/5 hover:bg-black/40 transition-all hover:scale-105 active:scale-95 flex items-center justify-center overflow-hidden">
-                            <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
-                                {user.email?.[0].toUpperCase()}
+                {/* Right Side Actions */}
+                <div className="flex items-center gap-3 pointer-events-auto">
+                    {/* Share Button - visible only when package is open */}
+                    {isPackageOpen && (
+                        <button
+                            onClick={onShare}
+                            className="p-3 bg-black/20 backdrop-blur-md rounded-full text-white/70 hover:text-white border border-white/5 hover:bg-black/40 transition-all hover:scale-105 active:scale-95"
+                            aria-label="Share"
+                        >
+                            <Share2 size={20} />
+                        </button>
+                    )}
+
+                    {/* Profile Trigger - Only show if logged in */}
+                    {user && (
+                        <button
+                            onClick={handleProfileClick}
+                            className="group relative"
+                            aria-label="Profile"
+                        >
+                            <div className="p-3 bg-black/20 backdrop-blur-md rounded-full text-white/70 hover:text-white border border-white/5 hover:bg-black/40 transition-all hover:scale-105 active:scale-95 flex items-center justify-center overflow-hidden">
+                                <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
+                                    {user.email?.[0].toUpperCase()}
+                                </div>
                             </div>
-                        </div>
-                    </button>
-                )}
+                        </button>
+                    )}
+                </div>
             </header>
 
             {/* Modals */}

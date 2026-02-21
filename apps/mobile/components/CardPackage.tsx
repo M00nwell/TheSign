@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -17,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
 import LoginModal from './LoginModal';
 import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface CardPackageProps {
     children: React.ReactNode;
@@ -26,9 +26,37 @@ interface CardPackageProps {
 }
 
 export default function CardPackage({ children, isOpen, onOpen, language }: CardPackageProps) {
-    // ... (existing code: animation values) ...
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Animated values
     const translateX = useSharedValue(0);
     const arrowOffset = useSharedValue(0);
+    const context = useSharedValue({ x: 0 });
+    const isAuthShared = useSharedValue(false);
+
+    // Check storage on mount to see if user has already opened today's omen
+    React.useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const userId = session?.user?.id ?? 'anon';
+                const todayKey = new Date().toISOString().split('T')[0];
+                const storageKey = `daily-omen-v4-${todayKey}-${userId}`;
+
+                const cached = await AsyncStorage.getItem(storageKey);
+
+                // If we found today's omen, auto-open to skip the package
+                if (cached) {
+                    onOpen();
+                }
+                // Otherwise, stay closed (default)
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        checkStatus();
+    }, []);
 
     React.useEffect(() => {
         arrowOffset.value = withRepeat(
@@ -47,23 +75,6 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
         }
     }, [isOpen]);
 
-    const leftArrowStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: arrowOffset.value }]
-    }));
-
-    const rightArrowStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: -arrowOffset.value }]
-    }));
-
-    const context = useSharedValue({ x: 0 });
-
-    const openPackage = () => {
-        onOpen();
-    };
-
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
     React.useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setIsAuthenticated(!!session);
@@ -76,6 +87,23 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
         return () => subscription.unsubscribe();
     }, []);
 
+    React.useEffect(() => {
+        isAuthShared.value = isAuthenticated;
+    }, [isAuthenticated]);
+
+    const leftArrowStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: arrowOffset.value }]
+    }));
+
+    const rightArrowStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: -arrowOffset.value }]
+    }));
+
+    const handleLoginSuccess = () => {
+        setShowLoginModal(false);
+        onOpen();
+    };
+
     const handleOpenAttempt = () => {
         if (isAuthenticated) {
             onOpen();
@@ -84,31 +112,18 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
         }
     };
 
-    const handleLoginSuccess = () => {
-        setShowLoginModal(false);
-        onOpen();
-    };
-
-
-    const isAuthShared = useSharedValue(false);
-
-    React.useEffect(() => {
-        isAuthShared.value = isAuthenticated;
-    }, [isAuthenticated]);
-
     const pan = Gesture.Pan()
         .onStart(() => {
             context.value = { x: translateX.value };
         })
         .onUpdate((event) => {
-            // Allow dragging left or right
             translateX.value = event.translationX * 0.8;
         })
         .onEnd((event) => {
             if (Math.abs(event.translationX) > 100) {
                 if (isAuthShared.value) {
                     runOnJS(handleOpenAttempt)();
-                    // Fly off
+                    // Fly off screen
                     translateX.value = withSpring(Math.sign(event.translationX) * 1000);
                 } else {
                     runOnJS(handleOpenAttempt)();
@@ -136,7 +151,7 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
         const rotate = interpolate(
             translateX.value,
             [-200, 200],
-            [-10, 10], // Rotate slightly with the drag
+            [-10, 10],
             Extrapolation.CLAMP
         );
 
@@ -145,19 +160,9 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                 { translateX: translateX.value },
                 { scale },
                 { perspective: 1000 },
-                { rotate: `${rotate}deg` } // simple 2d rotation or use rotateZ
+                { rotate: `${rotate}deg` }
             ],
             opacity
-        };
-    });
-
-    const contentStyle = useAnimatedStyle(() => {
-        // Content fades in or scales up when package opens?
-        // For now, content is just behind.
-        return {
-            // No strict animation needed if it's revealed by the package moving away
-            // But we can add a slight scale up
-            transform: [{ scale: isOpen ? withSpring(1) : 0.95 }]
         };
     });
 
@@ -167,9 +172,6 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
         : today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
     if (isOpen) {
-        // Just return children directly to remove the gesture handler wrapper
-        // and avoid any interference, or keep it wrapper for animation consistency.
-        // Let's fade in children.
         return (
             <Animated.View style={{ opacity: 1, transform: [{ scale: 1 }], flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 {children}
@@ -185,13 +187,9 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                 onSuccess={handleLoginSuccess}
             />
 
-            {/* The Content (Hidden or Behind) */}
+            {/* The Content (Hidden Behind) */}
             <View style={{ position: 'absolute', width: '100%', height: '100%', zIndex: 0 }}>
-                {/*  We don't render children yet to prevent flashing or interaction,
-                      or we render them but hidden.
-                      Actually, keeping them mounted but covered is fine.
-                 */}
-                {/* {children} */}
+                {/* Children kept mounted but covered */}
             </View>
 
             {/* The Package */}
@@ -253,7 +251,7 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                             style={StyleSheet.absoluteFill}
                         />
 
-                        {/* Jagged Top Edge Simulation (Just a dark line for now, difficult to perform clip-path in RN without SVG) */}
+                        {/* Jagged Top Edge Simulation */}
                         <View className="absolute -top-[1px] left-0 right-0 h-[2px] bg-black/80" />
 
                         <View className="flex-1 items-center justify-center p-8 space-y-8">

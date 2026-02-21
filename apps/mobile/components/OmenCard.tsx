@@ -1,5 +1,5 @@
 import { View, Text, Pressable, Image, ActivityIndicator, ImageBackground } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign } from '@expo/vector-icons';
 import Animated, {
@@ -12,6 +12,9 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { captureRef } from 'react-native-view-shot';
+import Constants from 'expo-constants';
+import { supabase } from '../lib/supabase';
 
 // Matches the structure from web app content
 interface OmenContent {
@@ -57,10 +60,17 @@ const toChineseLunarDay = (d: number) => {
     return chineseDays[d] || d.toString();
 }
 
-const DEV_API = 'http://192.168.0.17:3000/api/daily-omen'; // Ensure this matches your local IP
-const PROD_API = 'https://www.thedailysign.com/api/daily-omen';
-const API_URL = PROD_API;
+// Derive host from where Metro is running — works for Android emulator AND physical devices
+// Constants.expoConfig.hostUri is like "192.168.0.17:8081" (same host Metro uses)
+const getDevApiUrl = () => {
+    const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? '10.0.2.2';
+    const url = `http://${host}:3000/api/daily-omen`;
+    console.log('[OmenCard] DEV API URL:', url);
+    return url;
+};
 
+const PROD_API = 'https://www.thedailysign.com/api/daily-omen';
+const API_URL = __DEV__ ? getDevApiUrl() : PROD_API;
 // Module-level deduplication
 let activeFetchPromise: Promise<OmenData | null> | null = null;
 
@@ -69,12 +79,43 @@ interface OmenCardProps {
 }
 
 
-import { supabase } from '../lib/supabase';
 
-export default function OmenCard({ language }: OmenCardProps) {
+
+const OmenCard = forwardRef<any, OmenCardProps>(({ language }, ref) => {
     const [omen, setOmen] = useState<OmenData | null>(null);
     const [loading, setLoading] = useState(true);
     const [isFlippedState, setIsFlippedState] = useState(false);
+    const [isCapturing, setIsCapturing] = useState(false);
+
+    // Refs for capture
+    const frontRef = useRef<Animated.View>(null); // Ideally View or Animated.View
+    const backRef = useRef<Animated.View>(null);
+
+    useImperativeHandle(ref, () => ({
+        capture: async () => {
+            const target = isFlippedState ? backRef : frontRef;
+            if (target.current) {
+                try {
+                    // Hide UI-only elements before capture
+                    setIsCapturing(true);
+                    // Wait one frame so React re-renders before we screenshot
+                    await new Promise(resolve => setTimeout(resolve, 80));
+                    const uri = await captureRef(target, {
+                        format: 'png',
+                        quality: 0.9,
+                        result: 'tmpfile'
+                    });
+                    return uri;
+                } catch (e) {
+                    console.error("Capture failed", e);
+                    throw e;
+                } finally {
+                    setIsCapturing(false);
+                }
+            }
+            return null;
+        }
+    }));
 
     // Reanimated Shared Values
     const rotateY = useSharedValue(0);
@@ -258,11 +299,12 @@ export default function OmenCard({ language }: OmenCardProps) {
 
                         {/* FRONT FACE: RESULT */}
                         <Animated.View
+                            ref={frontRef}
                             className="absolute w-full h-full bg-white rounded-3xl border border-gray-200 flex flex-col items-center justify-between p-6 overflow-hidden backface-hidden shadow-sm"
                             style={[frontAnimatedStyle, { backfaceVisibility: 'hidden' }]}
                         >
-                            {/* DEV RELOAD BUTTON */}
-                            {__DEV__ && (
+                            {/* DEV RELOAD BUTTON — hidden during capture */}
+                            {__DEV__ && !isCapturing && (
                                 <Pressable
                                     onPress={handleDevReload}
                                     className="absolute top-4 left-4 z-50 bg-gray-100 px-2 py-1 rounded opacity-50"
@@ -330,9 +372,12 @@ export default function OmenCard({ language }: OmenCardProps) {
                                         <Text className="text-2xl font-serif italic text-gray-600 leading-tight px-2 text-center">{omen.content[language].text}</Text>
                                     </View>
 
-                                    <Text className="mt-4 text-xs text-gray-400 font-medium tracking-wide uppercase">
-                                        {language === 'en' ? 'Swipe to Interpret' : '滑动查看解读'}
-                                    </Text>
+                                    {/* Swipe hint — hidden during capture */}
+                                    {!isCapturing && (
+                                        <Text className="mt-4 text-xs text-gray-400 font-medium tracking-wide uppercase">
+                                            {language === 'en' ? 'Swipe to Interpret' : '滑动查看解读'}
+                                        </Text>
+                                    )}
                                 </>
                             ) : (
                                 <View className="flex-1 items-center justify-center">
@@ -343,6 +388,7 @@ export default function OmenCard({ language }: OmenCardProps) {
 
                         {/* BACK FACE: EXPLANATION */}
                         <Animated.View
+                            ref={backRef}
                             className="absolute w-full h-full bg-slate-50 rounded-3xl border border-indigo-100 flex flex-col items-center p-8 pt-16 overflow-hidden backface-hidden shadow-sm"
                             style={[backStyleFinal, { backfaceVisibility: 'hidden' }]}
                         >
@@ -417,4 +463,6 @@ export default function OmenCard({ language }: OmenCardProps) {
             </GestureDetector>
         </View>
     );
-}
+});
+
+export default OmenCard;
