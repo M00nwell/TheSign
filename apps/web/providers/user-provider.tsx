@@ -32,10 +32,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        // Detect browser language
-        const browserLang = navigator.language
-        const isZh = browserLang.toLowerCase().startsWith('zh')
-        setDetectedLanguage(isZh ? 'zh' : 'en')
+        // Prefer previously saved language, then browser language
+        const saved = localStorage.getItem('language') as 'en' | 'zh' | null
+        if (saved === 'en' || saved === 'zh') {
+            setDetectedLanguage(saved)
+        } else {
+            const browserLang = navigator.language
+            setDetectedLanguage(browserLang.toLowerCase().startsWith('zh') ? 'zh' : 'en')
+        }
     }, [])
 
     const fetchUserData = async () => {
@@ -97,8 +101,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const setLanguage = async (lang: 'en' | 'zh') => {
-        setProfile((prev: any) => ({ ...prev, language: lang }))
+        // Always persist locally for immediate feedback & guest users
+        localStorage.setItem('language', lang)
 
+        if (!user) {
+            // Not logged in — local storage is the only store
+            setDetectedLanguage(lang)
+            return
+        }
+
+        // Logged in — update profile optimistically then sync to DB
+        setProfile((prev: any) => ({ ...prev, language: lang }))
         try {
             await updateProfile({ language: lang })
             router.refresh()
@@ -108,8 +121,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    // Computed language: Profile > Detected > Default En
-    const language = (profile?.language || detectedLanguage) as 'en' | 'zh'
+    // Computed language: Profile (DB) > localStorage > Browser detection > 'en'
+    const storedLang = typeof window !== 'undefined' ? localStorage.getItem('language') as 'en' | 'zh' | null : null
+    const language = (profile?.language || storedLang || detectedLanguage) as 'en' | 'zh'
+
 
     return (
         <UserContext.Provider value={{ user, profile, isLoading, language, setLanguage, refreshUser: fetchUserData }}>
