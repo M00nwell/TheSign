@@ -1,13 +1,22 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import OmenCard, { OmenCardHandle } from "@/components/omen-card";
 import CardPackage from "@/components/card-package";
 import Header from "@/components/header";
+import { useUser } from '@/providers/user-provider'
 
 export default function Home() {
   const [isPackageOpen, setIsPackageOpen] = useState(false)
   const omenCardRef = useRef<OmenCardHandle>(null)
+  const { user } = useUser()
+
+  // Reset to card-packaging stage when user logs out
+  useEffect(() => {
+    if (!user) {
+      setIsPackageOpen(false)
+    }
+  }, [user])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-[#0a0a0a] text-white overflow-hidden relative">
