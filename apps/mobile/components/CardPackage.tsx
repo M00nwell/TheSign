@@ -198,7 +198,7 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                     {/* --- TOP STRIP (The part that tears) --- */}
                     <View className="absolute top-0 left-0 right-0 h-[85px] z-30 overflow-hidden">
                         <LinearGradient
-                            colors={['#374151', '#1f2937', '#111827']}
+                            colors={['#1a1f2e', '#111827', '#0a0d14']}
                             style={StyleSheet.absoluteFill}
                         />
                         {/* Crimp Pattern (Top) */}
@@ -247,7 +247,7 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                     {/* --- MAIN BODY --- */}
                     <View className="absolute top-[85px] left-0 right-0 bottom-0 z-20">
                         <LinearGradient
-                            colors={['#1f2937', '#111827', '#000000']}
+                            colors={['#141828', '#0d1117', '#060a10']}
                             style={StyleSheet.absoluteFill}
                         />
 
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#374151',
+        borderColor: 'rgba(255,255,255,0.06)',
     },
     arrowText: {
         color: 'rgba(255, 255, 255, 0.4)',

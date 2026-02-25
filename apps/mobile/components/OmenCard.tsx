@@ -245,16 +245,35 @@ const OmenCard = forwardRef<any, OmenCardProps>(({ language }, ref) => {
 
     const handleDevReload = async () => {
         setLoading(true);
+
+        // Clear client-side cache for today (use same user-scoped key as fetchOmen)
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id ?? 'anon';
         const todayKey = new Date().toISOString().split('T')[0];
-        const storageKey = `daily-omen-v4-${todayKey}`;
+        const storageKey = `daily-omen-v4-${todayKey}-${userId}`;
         await AsyncStorage.removeItem(storageKey);
 
-        // Reset rotation
+        // Reset card rotation
         rotateY.value = withSpring(0);
         runOnJS(setIsFlippedState)(false);
 
-        // Fetch new
-        fetchOmen();
+        // Fetch fresh omen with ?force=true — bypasses server-side DB cache
+        try {
+            const forceUrl = `${API_URL}?force=true`;
+            const headers: HeadersInit = {};
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+            const res = await fetch(forceUrl, { headers });
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+            const data: OmenData = await res.json();
+            await AsyncStorage.setItem(storageKey, JSON.stringify(data));
+            setOmen(data);
+        } catch (e) {
+            console.error('[DevReload] Failed:', e);
+        } finally {
+            setLoading(false);
+        }
     };
 
 

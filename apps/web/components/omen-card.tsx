@@ -26,6 +26,32 @@ const toChineseLunarDay = (d: number) => {
     return chineseDays[d] || d.toString();
 }
 
+/** Shrinks font-size until text fits inside its container — no scrolling needed. */
+function useFitText(text: string, minSize = 10, maxSize = 16) {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [fontSize, setFontSize] = useState(maxSize)
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+        // Binary-search for the largest font-size that fits
+        let lo = minSize, hi = maxSize, best = minSize
+        for (let i = 0; i < 10; i++) {
+            const mid = (lo + hi) / 2
+            el.style.fontSize = `${mid}px`
+            if (el.scrollHeight <= el.clientHeight + 1) {
+                best = mid
+                lo = mid
+            } else {
+                hi = mid
+            }
+        }
+        setFontSize(best)
+        el.style.fontSize = ''
+    }, [text, minSize, maxSize])
+
+    return { containerRef, fontSize }
+}
 
 export interface OmenCardHandle {
     share: () => Promise<void>
@@ -324,7 +350,8 @@ const OmenCard = forwardRef<OmenCardHandle>(function OmenCard(_, ref) {
         setImageError(false)
 
         try {
-            const data = await getDailyOmen()
+            const data = await getDailyOmen(new Date(), true) // forceNew: bypass DB cache
+
             if (data) {
                 localStorage.setItem(storageKey, JSON.stringify(data))
                 setOmenData(data)
@@ -456,7 +483,7 @@ const OmenCard = forwardRef<OmenCardHandle>(function OmenCard(_, ref) {
                                 <div className="relative w-full h-full -mt-8" style={{ transformStyle: 'preserve-3d' }}>
                                     <motion.div
                                         className="relative w-full h-full"
-                                        style={{ transform: 'translateZ(16px)', filter: 'drop-shadow(0 20px 20px rgba(0,0,0,0.3))' }}
+                                        style={{ transform: 'translateZ(10px)', filter: 'drop-shadow(0 20px 20px rgba(0,0,0,0.3))' }}
                                     >
                                         <Image
                                             src={(!imageError && omenData.imageUrl) ? omenData.imageUrl : '/sign.png'}
@@ -504,7 +531,7 @@ const OmenCard = forwardRef<OmenCardHandle>(function OmenCard(_, ref) {
                                     <div className="w-[80%] bg-[#f4e4bc] relative rounded-sm p-4 mb-4 shadow-xl border border-[#e6d2a0] flex flex-col items-center justify-center font-serif text-gray-800"
                                         style={{
                                             backgroundImage: "url('https://www.transparenttextures.com/patterns/aged-paper.png')",
-                                            transform: 'translateZ(15px)',
+                                            transform: 'translateZ(10px)',
                                         }}>
                                         <div className="text-sm tracking-widest mb-1 opacity-80 font-medium">
                                             {omenData.almanac.gzYear}年
@@ -542,7 +569,7 @@ const OmenCard = forwardRef<OmenCardHandle>(function OmenCard(_, ref) {
                                     <div className="h-8 mb-4 w-full" />
                                 )}
 
-                                <div className="flex-1 overflow-y-auto w-full pr-2 custom-scrollbar flex flex-col justify-start pt-2">
+                                <div className="flex-1 overflow-visible w-full flex flex-col justify-start pt-2">
                                     <p className="text-gray-700 leading-relaxed text-base font-normal whitespace-pre-wrap text-center">
                                         {omenData.content[language].explanation}
                                     </p>

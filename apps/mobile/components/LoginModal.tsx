@@ -5,7 +5,14 @@ import { supabase } from '../lib/supabase';
 import { AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
+import * as Linking from 'expo-linking';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import Constants from 'expo-constants';
+
+// Apple Sign-In doesn't work in Expo Go — the identity token aud is 'host.exp.Exponent'
+// instead of the app bundle ID, which Supabase (correctly) rejects.
+// Use email/password in Expo Go dev; Apple Sign-In works in real/dev builds.
+const isExpoGo = Constants.appOwnership === 'expo';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -20,50 +27,69 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleOAuthSignIn = async (provider: 'google' | 'apple') => {
+    // Native Apple Sign-In — no browser popup, no redirect URLs needed
+    const handleAppleSignIn = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            const redirectUrl = makeRedirectUri({
-                scheme: 'the-sign',
-                path: 'auth/callback',
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
             });
 
-            // Attempting implicit flow to avoid PKCE verifier issues (Auth session missing)
+            if (!credential.identityToken) throw new Error('No identity token from Apple');
+
+            const { error: signInError } = await supabase.auth.signInWithIdToken({
+                provider: 'apple',
+                token: credential.identityToken,
+            });
+
+            if (signInError) throw signInError;
+            onSuccess();
+        } catch (e: any) {
+            if (e.code === 'ERR_REQUEST_CANCELED') {
+                // User dismissed Apple Sign-In — not an error
+                return;
+            }
+            setError(e.message);
+            Alert.alert('Auth Error', e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Google Sign-In via web OAuth flow
+    const handleGoogleSignIn = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const redirectUrl = Linking.createURL('/auth/callback');
             const { data, error: signInError } = await supabase.auth.signInWithOAuth({
-                provider,
-                options: {
-                    redirectTo: redirectUrl,
-                    skipBrowserRedirect: true,
-                    // @ts-ignore
-                    flowType: 'implicit'
-                },
+                provider: 'google',
+                options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
             });
-
             if (signInError) throw signInError;
 
             if (data?.url) {
                 const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-
                 if (result.type === 'success' && result.url) {
-                    // Try to extract tokens (Implicit Flow) - Prioritize this if present
+                    const code = result.url.match(/[?&]code=([^&]+)/)?.[1];
                     const accessToken = result.url.match(/[#&]access_token=([^&]+)/)?.[1];
                     const refreshToken = result.url.match(/[#&]refresh_token=([^&]+)/)?.[1];
-
-                    // Try to extract code (PKCE Flow) - Fallback
-                    const code = result.url.match(/[?&]code=([^&]+)/)?.[1];
-
-                    if (accessToken) {
-                        const { error: sessionError } = await supabase.auth.setSession({
+                    if (code) {
+                        const { error: e } = await supabase.auth.exchangeCodeForSession(decodeURIComponent(code));
+                        if (e) throw e;
+                        onSuccess();
+                    } else if (accessToken) {
+                        const { error: e } = await supabase.auth.setSession({
                             access_token: decodeURIComponent(accessToken),
                             refresh_token: refreshToken ? decodeURIComponent(refreshToken) : '',
                         });
-                        if (sessionError) throw sessionError;
-                        onSuccess();
-                    } else if (code) {
-                        const { error: sessionError } = await supabase.auth.exchangeCodeForSession(decodeURIComponent(code));
-                        if (sessionError) throw sessionError;
+                        if (e) throw e;
                         onSuccess();
                     }
                 }
@@ -215,19 +241,28 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
                                     <View className="flex-row space-x-4">
                                         <Pressable
-                                            onPress={() => handleOAuthSignIn('google')}
+                                            onPress={handleGoogleSignIn}
                                             className="flex-1 h-12 flex-row items-center justify-center bg-white/5 border border-white/10 rounded-xl active:bg-white/10"
                                         >
                                             <AntDesign name="google" size={20} color="white" />
                                             <Text className="text-white font-medium ml-2">Google</Text>
                                         </Pressable>
-                                        <Pressable
-                                            onPress={() => handleOAuthSignIn('apple')}
-                                            className="flex-1 h-12 flex-row items-center justify-center bg-white/5 border border-white/10 rounded-xl active:bg-white/10"
-                                        >
-                                            <AntDesign name="apple" size={20} color="white" />
-                                            <Text className="text-white font-medium ml-2">Apple</Text>
-                                        </Pressable>
+                                        {Platform.OS === 'ios' && (
+                                            isExpoGo ? (
+                                                <View className="flex-1 h-12 flex-row items-center justify-center border border-white/5 rounded-xl opacity-40">
+                                                    <AntDesign name="apple" size={16} color="#6b7280" />
+                                                    <Text className="text-gray-500 text-xs ml-2">Apple (dev build only)</Text>
+                                                </View>
+                                            ) : (
+                                                <Pressable
+                                                    onPress={handleAppleSignIn}
+                                                    className="flex-1 h-12 flex-row items-center justify-center bg-white/5 border border-white/10 rounded-xl active:bg-white/10"
+                                                >
+                                                    <AntDesign name="apple" size={20} color="white" />
+                                                    <Text className="text-white font-medium ml-2">Apple</Text>
+                                                </Pressable>
+                                            )
+                                        )}
                                     </View>
                                 </View>
 

@@ -28,7 +28,7 @@ export interface OmenData {
 // Removed
 
 
-export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | null> {
+export async function getDailyOmen(date: Date = new Date(), forceNew = false): Promise<OmenData | null> {
     const supabase = await createClient()
 
     // 1. Get Almanac data for the date
@@ -71,18 +71,27 @@ export async function getDailyOmen(date: Date = new Date()): Promise<OmenData | 
     let existingActivityType: 'suit' | 'avoid' | null = null
 
     if (user) {
-        // Check for existing daily omen
-        const { data: dailyOmen } = await supabase
-            .from('user_daily_omens')
-            .select('omen_id, activity_key, activity_type')
-            .eq('user_id', user.id)
-            .eq('date', dateStr)
-            .single()
+        // In dev mode with forceNew: wipe today's record so we always get a fresh random omen
+        if (forceNew) {
+            await supabase
+                .from('user_daily_omens')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('date', dateStr)
+        } else {
+            // Check for existing daily omen
+            const { data: dailyOmen } = await supabase
+                .from('user_daily_omens')
+                .select('omen_id, activity_key, activity_type')
+                .eq('user_id', user.id)
+                .eq('date', dateStr)
+                .single()
 
-        if (dailyOmen) {
-            existingOmenId = dailyOmen.omen_id
-            existingActivityKey = dailyOmen.activity_key
-            existingActivityType = dailyOmen.activity_type as 'suit' | 'avoid'
+            if (dailyOmen) {
+                existingOmenId = dailyOmen.omen_id
+                existingActivityKey = dailyOmen.activity_key
+                existingActivityType = dailyOmen.activity_type as 'suit' | 'avoid'
+            }
         }
     }
 
