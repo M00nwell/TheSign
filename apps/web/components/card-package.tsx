@@ -140,27 +140,27 @@ export default function CardPackage({ children, onOpen }: CardPackageProps) {
                     transition={{ duration: 0.5, ease: "circIn" }}
                 >
                     {/* Strip Visuals */}
-                    <div className="w-full h-full bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900 rounded-t-xl border-x border-t border-gray-600 shadow-xl overflow-hidden relative">
+                    <div className="w-full h-full bg-gradient-to-b from-yellow-400 via-amber-500 to-amber-600 rounded-t-xl border-x border-t border-yellow-300 shadow-xl overflow-hidden relative">
                         {/* Crimp Pattern at top */}
                         <div className="absolute top-0 left-0 right-0 h-3 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#000_2px,#000_4px)] opacity-40 mix-blend-multiply" />
 
                         {/* Tear Indicator Area */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
-                            <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1 shadow-black drop-shadow-md">
-                                {language === 'zh' ? '向两侧撕开' : 'Tear Open'}
+                            <p className="text-amber-900/80 text-[10px] font-bold uppercase tracking-widest mb-1 drop-shadow-sm">
+                                {language === 'zh' ? '滑动撕开' : 'Tear Open'}
                             </p>
                             <div className="flex gap-8 items-center justify-center px-4 w-full">
                                 <motion.span
-                                    className="text-white/40 text-lg font-light"
+                                    className="text-amber-900/60 text-lg font-light"
                                     animate={{ x: [-5, 0, -5] }}
                                     transition={{ repeat: Infinity, duration: 1.5 }}
                                 >
                                     ←
                                 </motion.span>
                                 {/* Dashed Line */}
-                                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/30 to-transparent border-t border-dashed border-white/20" />
+                                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-amber-900/30 to-transparent border-t border-dashed border-amber-900/20" />
                                 <motion.span
-                                    className="text-white/40 text-lg font-light"
+                                    className="text-amber-900/60 text-lg font-light"
                                     animate={{ x: [5, 0, 5] }}
                                     transition={{ repeat: Infinity, duration: 1.5 }}
                                 >
@@ -187,37 +187,40 @@ export default function CardPackage({ children, onOpen }: CardPackageProps) {
                         if (status === 'opening') onTearComplete()
                     }}
                 >
-                    <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-b-xl border-x border-b border-gray-700 shadow-2xl overflow-hidden relative">
-                        {/* Foil/Texture Overlays */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
-                        <div className="absolute inset-0 opacity-[0.15] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none" />
+                    <div className="w-full h-full bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-b-xl border-x border-b border-amber-400 shadow-2xl overflow-hidden relative">
+                        {/* Gold shimmer overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-amber-300/30 via-white/10 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 opacity-[0.10] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none" />
 
                         {/* Jagged Top Edge (Visual trick) - The "Torn" paper look */}
                         <div
-                            className="absolute -top-[6px] left-0 right-0 h-[10px] bg-gray-800"
+                            className="absolute -top-[6px] left-0 right-0 h-[10px] bg-amber-500"
                             style={{
                                 clipPath: 'polygon(0% 100%, 5% 0%, 10% 100%, 15% 0%, 20% 100%, 25% 0%, 30% 100%, 35% 0%, 40% 100%, 45% 0%, 50% 100%, 55% 0%, 60% 100%, 65% 0%, 70% 100%, 75% 0%, 80% 100%, 85% 0%, 90% 100%, 95% 0%, 100% 100%)'
                             }}
                         />
 
+                        {/* Horse Silhouette Background */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src="/horse-silhouette.png"
+                            alt=""
+                            aria-hidden="true"
+                            className="absolute inset-0 w-full h-full object-contain object-center opacity-[0.18] pointer-events-none select-none scale-[1.15]"
+                        />
+
                         {/* Existing Content Layout */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 pointer-events-none space-y-8">
-
-                            {/* Logo / Icon */}
-                            <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-                                <span className="text-2xl">🔮</span>
-                            </div>
-
                             {/* Date Display */}
                             <div className="flex flex-col items-center text-center space-y-4">
-                                <h2 className="text-gray-400 font-serif tracking-widest text-xs uppercase mb-1">
+                                <h2 className="text-amber-900/70 font-serif tracking-widest text-xs uppercase mb-1">
                                     {language === 'zh' ? '今日运势' : 'Daily Omen'}
                                 </h2>
-                                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 drop-shadow-sm px-4 leading-tight">
+                                <h1 className="text-3xl font-bold text-amber-950 drop-shadow-sm px-4 leading-tight">
                                     {dateString}
                                 </h1>
-                                <div className="w-20 h-[1px] bg-white/10 my-4" />
-                                <p className="text-white/30 text-[10px] tracking-[0.3em] font-light border border-white/10 px-3 py-1 rounded-full">
+                                <div className="w-20 h-[1px] bg-amber-800/30 my-4" />
+                                <p className="text-amber-900/50 text-[10px] tracking-[0.3em] font-light border border-amber-800/30 px-3 py-1 rounded-full">
                                     {language === 'zh' ? '每日限定' : 'LIMITED EDITION'}
                                 </p>
                             </div>

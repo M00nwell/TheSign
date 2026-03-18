@@ -7,6 +7,45 @@ import { AUTH_PROVIDERS, type AuthProvider } from '@repo/api'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/providers/user-provider'
 
+const I18N = {
+    en: {
+        title: 'The Sign',
+        welcomeBack: 'Welcome back',
+        createAccount: 'Create your account',
+        emailLabel: 'Email',
+        emailPlaceholder: 'you@example.com',
+        passwordLabel: 'Password',
+        passwordPlaceholder: '••••••••',
+        processing: 'Processing...',
+        signIn: 'Sign In',
+        signUp: 'Sign Up',
+        orContinueWith: 'Or continue with',
+        noAccount: "Don't have an account?",
+        haveAccount: 'Already have an account?',
+        signUpLink: 'Sign up',
+        signInLink: 'Sign in',
+        continueWith: (label: string) => `Continue with ${label}`,
+    },
+    zh: {
+        title: 'The Sign',
+        welcomeBack: '欢迎回来',
+        createAccount: '创建您的账户',
+        emailLabel: '邮箱',
+        emailPlaceholder: 'you@example.com',
+        passwordLabel: '密码',
+        passwordPlaceholder: '••••••••',
+        processing: '处理中…',
+        signIn: '登录',
+        signUp: '注册',
+        orContinueWith: '或使用以下方式继续',
+        noAccount: '还没有账户？',
+        haveAccount: '已有账户？',
+        signUpLink: '立即注册',
+        signInLink: '立即登录',
+        continueWith: (label: string) => `使用 ${label} 继续`,
+    },
+}
+
 const initialState = {
     error: undefined as string | undefined,
     message: undefined as string | undefined,
@@ -43,7 +82,7 @@ const Icons = {
     ),
 }
 
-function SubmitButton({ isPending, isLogin }: { isPending: boolean; isLogin: boolean }) {
+function SubmitButton({ isPending, isLogin, t }: { isPending: boolean; isLogin: boolean; t: typeof I18N['en'] }) {
     return (
         <button
             type="submit"
@@ -53,12 +92,12 @@ function SubmitButton({ isPending, isLogin }: { isPending: boolean; isLogin: boo
                 : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:shadow-lg shadow-indigo-500/30'
                 }`}
         >
-            {isPending ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
+            {isPending ? t.processing : isLogin ? t.signIn : t.signUp}
         </button>
     )
 }
 
-function SocialLoginButtons() {
+function SocialLoginButtons({ t }: { t: typeof I18N['en'] }) {
     const supabase = createClient()
 
     const handleOAuthSignIn = async (provider: AuthProvider) => {
@@ -82,7 +121,7 @@ function SocialLoginButtons() {
                         className="flex items-center justify-center w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all group"
                     >
                         <Icon className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
-                        <span className="text-gray-200 text-sm font-medium">{provider.label}</span>
+                        <span className="text-gray-200 text-sm font-medium">{t.continueWith(provider.label)}</span>
                     </button>
                 )
             })}
@@ -99,7 +138,8 @@ interface AuthFormProps {
 export default function AuthForm({ view, onSuccess, className }: AuthFormProps = {}) {
     const searchParams = useSearchParams()
     const router = useRouter()
-    const { refreshUser } = useUser()
+    const { refreshUser, language } = useUser()
+    const t = I18N[language] ?? I18N.en
     const [isLogin, setIsLogin] = useState(true)
 
     useEffect(() => {
@@ -130,13 +170,13 @@ export default function AuthForm({ view, onSuccess, className }: AuthFormProps =
     // Let's assume for now the standard flow works or simple state message is enough.
 
     return (
-        <div className={`w-full max-w-md p-8 relative z-10 ${className || ''}`}>
+        <div className={`w-full max-w-md px-8 pb-8 pt-14 relative z-10 ${className || ''}`}>
             <div className="flex flex-col items-center mb-8">
-                <h1 className="text-5xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500">
-                    The Sign
+                <h1 className="text-5xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500 pb-3">
+                    {t.title}
                 </h1>
                 <p className="text-gray-400 mt-3 text-lg">
-                    {isLogin ? 'Welcome back' : 'Create your account'}
+                    {isLogin ? t.welcomeBack : t.createAccount}
                 </p>
             </div>
 
@@ -144,26 +184,26 @@ export default function AuthForm({ view, onSuccess, className }: AuthFormProps =
                 <form action={formAction} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Email
+                            {t.emailLabel}
                         </label>
                         <input
                             name="email"
                             type="email"
                             required
-                            placeholder="you@example.com"
+                            placeholder={t.emailPlaceholder}
                             className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-gray-600 transition-all"
                         />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Password
+                            {t.passwordLabel}
                         </label>
                         <input
                             name="password"
                             type="password"
                             required
-                            placeholder="••••••••"
+                            placeholder={t.passwordPlaceholder}
                             className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-gray-600 transition-all"
                         />
                     </div>
@@ -180,16 +220,16 @@ export default function AuthForm({ view, onSuccess, className }: AuthFormProps =
                         </div>
                     )}
 
-                    <SubmitButton isPending={isPending} isLogin={isLogin} />
+                    <SubmitButton isPending={isPending} isLogin={isLogin} t={t} />
                 </form>
 
                 <div className="my-6 flex items-center">
                     <div className="flex-grow border-t border-white/10"></div>
-                    <span className="mx-4 text-gray-500 text-sm">Or continue with</span>
+                    <span className="mx-4 text-gray-500 text-sm">{t.orContinueWith}</span>
                     <div className="flex-grow border-t border-white/10"></div>
                 </div>
 
-                <SocialLoginButtons />
+                <SocialLoginButtons t={t} />
 
                 <div className="mt-8 text-center pt-6 border-t border-white/10">
                     <button
@@ -199,8 +239,8 @@ export default function AuthForm({ view, onSuccess, className }: AuthFormProps =
                         }}
                         className="text-sm text-gray-400 hover:text-white transition-colors flex items-center justify-center w-full gap-2 group"
                     >
-                        <span>{isLogin ? "Don't have an account?" : "Already have an account?"}</span>
-                        <span className="text-indigo-400 group-hover:underline decoration-indigo-400/30 underline-offset-4">{isLogin ? "Sign up" : "Sign in"}</span>
+                        <span>{isLogin ? t.noAccount : t.haveAccount}</span>
+                        <span className="text-indigo-400 group-hover:underline decoration-indigo-400/30 underline-offset-4">{isLogin ? t.signUpLink : t.signInLink}</span>
                     </button>
                 </div>
             </div>

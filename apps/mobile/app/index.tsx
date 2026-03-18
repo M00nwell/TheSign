@@ -188,6 +188,7 @@ export default function Home() {
                     isOpen={isPackageOpen}
                     onOpen={() => setIsPackageOpen(true)}
                     language={language}
+                    setLanguage={setLanguage}
                 >
                     <OmenCard ref={omenCardRef} language={language} />
                 </CardPackage>
@@ -209,6 +210,8 @@ export default function Home() {
                 isOpen={showLogin}
                 onClose={() => setShowLogin(false)}
                 onSuccess={() => setShowLogin(false)}
+                language={language}
+                setLanguage={setLanguage}
             />
         </Animated.View>
     );

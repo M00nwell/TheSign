@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
     useSharedValue,
@@ -23,9 +23,10 @@ interface CardPackageProps {
     isOpen: boolean;
     onOpen: () => void;
     language: 'en' | 'zh';
+    setLanguage: (lang: 'en' | 'zh') => void;
 }
 
-export default function CardPackage({ children, isOpen, onOpen, language }: CardPackageProps) {
+export default function CardPackage({ children, isOpen, onOpen, language, setLanguage }: CardPackageProps) {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -185,6 +186,8 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                 isOpen={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
                 onSuccess={handleLoginSuccess}
+                language={language}
+                setLanguage={setLanguage}
             />
 
             {/* The Content (Hidden Behind) */}
@@ -198,7 +201,7 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                     {/* --- TOP STRIP (The part that tears) --- */}
                     <View className="absolute top-0 left-0 right-0 h-[85px] z-30 overflow-hidden">
                         <LinearGradient
-                            colors={['#1a1f2e', '#111827', '#0a0d14']}
+                            colors={['#fbbf24', '#f59e0b', '#d97706']}
                             style={StyleSheet.absoluteFill}
                         />
                         {/* Crimp Pattern (Top) */}
@@ -216,8 +219,8 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                             paddingTop: 8,
                             paddingHorizontal: 4
                         }}>
-                            <Text className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1 shadow-black shadow-sm">
-                                {language === 'zh' ? '向两侧撕开' : 'Tear Open'}
+                            <Text style={{ color: 'rgba(120,53,15,0.8)', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 4, marginBottom: 4 }}>
+                                {language === 'zh' ? '滑动撕开' : 'Tear Open'}
                             </Text>
                             <View style={{
                                 flexDirection: 'row',
@@ -226,17 +229,17 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                                 width: '100%',
                                 paddingHorizontal: 16
                             }}>
-                                <Animated.Text style={[styles.arrowText, leftArrowStyle]}>←</Animated.Text>
+                                <Animated.Text style={[styles.arrowText, leftArrowStyle, { color: 'rgba(120,53,15,0.6)' }]}>←</Animated.Text>
                                 {/* Dashed Line */}
                                 <View style={{
                                     flex: 1,
                                     height: 1,
                                     borderTopWidth: 1,
-                                    borderColor: 'rgba(255,255,255,0.2)',
+                                    borderColor: 'rgba(120,53,15,0.25)',
                                     borderStyle: 'dashed',
                                     marginHorizontal: 12
                                 }} />
-                                <Animated.Text style={[styles.arrowText, rightArrowStyle]}>→</Animated.Text>
+                                <Animated.Text style={[styles.arrowText, rightArrowStyle, { color: 'rgba(120,53,15,0.6)' }]}>→</Animated.Text>
                             </View>
                         </View>
 
@@ -247,30 +250,35 @@ export default function CardPackage({ children, isOpen, onOpen, language }: Card
                     {/* --- MAIN BODY --- */}
                     <View className="absolute top-[85px] left-0 right-0 bottom-0 z-20">
                         <LinearGradient
-                            colors={['#141828', '#0d1117', '#060a10']}
+                            colors={['#f59e0b', '#d97706', '#b45309']}
                             style={StyleSheet.absoluteFill}
                         />
 
-                        {/* Jagged Top Edge Simulation */}
-                        <View className="absolute -top-[1px] left-0 right-0 h-[2px] bg-black/80" />
+                        <View className="absolute -top-[1px] left-0 right-0 h-[2px]" style={{ backgroundColor: '#f59e0b' }} />
+
+                        {/* Horse Silhouette */}
+                        <Image
+                            source={require('../assets/horse-silhouette.png')}
+                            style={{
+                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                width: '100%', height: '100%',
+                                opacity: 0.18,
+                            }}
+                            resizeMode="contain"
+                        />
 
                         <View className="flex-1 items-center justify-center p-8 space-y-8">
-                            {/* Logo / Icon */}
-                            <View className="w-16 h-16 rounded-full bg-white/5 border border-white/10 items-center justify-center shadow-sm">
-                                <Text style={{ fontSize: 24 }}>🔮</Text>
-                            </View>
-
                             {/* Date Display */}
                             <View className="items-center space-y-4">
-                                <Text className="text-gray-400 font-serif tracking-widest text-xs uppercase mb-1">
+                                <Text style={{ color: 'rgba(120,53,15,0.7)', fontFamily: 'serif', letterSpacing: 4, fontSize: 10, textTransform: 'uppercase', marginBottom: 4 }}>
                                     {language === 'zh' ? '今日运势' : 'Daily Omen'}
                                 </Text>
-                                <Text className="text-3xl font-bold text-white text-center shadow-sm">
+                                <Text style={{ fontSize: 28, fontWeight: '700', color: '#431407', textAlign: 'center' }}>
                                     {dateString}
                                 </Text>
-                                <View className="w-20 h-[1px] bg-white/10 my-4" />
-                                <View className="border border-white/10 px-3 py-1 rounded-full">
-                                    <Text className="text-white/30 text-[10px] tracking-widest font-light uppercase">
+                                <View style={{ width: 80, height: 1, backgroundColor: 'rgba(120,53,15,0.25)', marginVertical: 16 }} />
+                                <View style={{ borderWidth: 1, borderColor: 'rgba(120,53,15,0.25)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 }}>
+                                    <Text style={{ color: 'rgba(120,53,15,0.5)', fontSize: 10, letterSpacing: 4, fontWeight: '300', textTransform: 'uppercase' }}>
                                         {language === 'zh' ? '每日限定' : 'LIMITED EDITION'}
                                     </Text>
                                 </View>

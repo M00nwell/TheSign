@@ -14,18 +14,67 @@ import Constants from 'expo-constants';
 // Use email/password in Expo Go dev; Apple Sign-In works in real/dev builds.
 const isExpoGo = Constants.appOwnership === 'expo';
 
+const I18N = {
+    en: {
+        title: 'The Sign',
+        welcomeBack: 'Welcome back',
+        createAccount: 'Create your account',
+        emailLabel: 'Email',
+        emailPlaceholder: 'you@example.com',
+        passwordLabel: 'Password',
+        passwordPlaceholder: '••••••••',
+        signIn: 'Sign In',
+        signUp: 'Sign Up',
+        orContinueWith: 'Or continue with',
+        google: 'Google',
+        apple: 'Apple',
+        appleDevOnly: 'Apple (dev build only)',
+        signUpSuccess: 'Check your email for the confirmation link!',
+        emptyFields: 'Please enter both email and password.',
+        noAccount: "Don't have an account?",
+        haveAccount: 'Already have an account?',
+        signUpLink: 'Sign up',
+        signInLink: 'Sign in',
+    },
+    zh: {
+        title: 'The Sign',
+        welcomeBack: '欢迎回来',
+        createAccount: '创建您的账户',
+        emailLabel: '邮箱',
+        emailPlaceholder: 'you@example.com',
+        passwordLabel: '密码',
+        passwordPlaceholder: '••••••••',
+        signIn: '登录',
+        signUp: '注册',
+        orContinueWith: '或使用以下方式继续',
+        google: 'Google',
+        apple: 'Apple',
+        appleDevOnly: 'Apple（仅限开发版）',
+        signUpSuccess: '请查收邮件中的确认链接！',
+        emptyFields: '请输入邮箱和密码。',
+        noAccount: '还没有账户？',
+        haveAccount: '已有账户？',
+        signUpLink: '立即注册',
+        signInLink: '立即登录',
+    },
+}
+
 interface LoginModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    language: 'en' | 'zh';
+    setLanguage: (lang: 'en' | 'zh') => void;
 }
 
-export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, onSuccess, language, setLanguage }: LoginModalProps) {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const t = I18N[language] ?? I18N.en;
 
     // Native Apple Sign-In — no browser popup, no redirect URLs needed
     const handleAppleSignIn = async () => {
@@ -104,7 +153,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
     const handleAuth = async () => {
         if (!email || !password) {
-            setError('Please enter both email and password.');
+            setError(t.emptyFields);
             return;
         }
 
@@ -113,28 +162,18 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
         try {
             if (isLogin) {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 onSuccess();
             } else {
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                });
+                const { error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
-                Alert.alert('Success', 'Check your email for the confirmation link!');
-                // Automatically switch to login or just close? 
-                // For now, let's just close or maybe keep them here to login.
-                // Usually sign up behaves like login if auto-confirm is on, but often it requires email verification.
-                // Let's assume we can proceed if session is created, otherwise alert.
+                Alert.alert('Success', t.signUpSuccess);
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
                     onSuccess();
                 } else {
-                    setIsLogin(true); // Switch to login view
+                    setIsLogin(true);
                 }
             }
         } catch (e: any) {
@@ -164,6 +203,42 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                 className="absolute inset-0"
                             />
 
+                            {/* Language Toggle — top left */}
+                            <View style={{
+                                position: 'absolute', top: 16, left: 16, zIndex: 50,
+                                flexDirection: 'row', alignItems: 'center',
+                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+                                borderRadius: 999, padding: 4,
+                            }}>
+                                <Pressable
+                                    onPress={() => setLanguage('en')}
+                                    style={{
+                                        paddingHorizontal: 12, paddingVertical: 4,
+                                        borderRadius: 999,
+                                        backgroundColor: language === 'en' ? '#4f46e5' : 'transparent',
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 12, fontWeight: '700',
+                                        color: language === 'en' ? 'white' : '#9ca3af',
+                                    }}>EN</Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => setLanguage('zh')}
+                                    style={{
+                                        paddingHorizontal: 12, paddingVertical: 4,
+                                        borderRadius: 999,
+                                        backgroundColor: language === 'zh' ? '#4f46e5' : 'transparent',
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 12, fontWeight: '700',
+                                        color: language === 'zh' ? 'white' : '#9ca3af',
+                                    }}>中文</Text>
+                                </Pressable>
+                            </View>
+
                             {/* Close Button */}
                             <Pressable
                                 onPress={onClose}
@@ -172,39 +247,39 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                 <AntDesign name="close" size={20} color="#9ca3af" />
                             </Pressable>
 
-                            <View className="p-8">
+                            <View className="p-8 pt-16">
                                 {/* Header */}
                                 <View className="items-center mb-8">
                                     <Text className="text-4xl font-extrabold text-white tracking-tighter mb-2">
-                                        The Sign
+                                        {t.title}
                                     </Text>
                                     <Text className="text-gray-400 text-base">
-                                        {isLogin ? 'Welcome back' : 'Create your account'}
+                                        {isLogin ? t.welcomeBack : t.createAccount}
                                     </Text>
                                 </View>
 
                                 {/* Form */}
                                 <View className="space-y-4">
                                     <View>
-                                        <Text className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Email</Text>
+                                        <Text className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">{t.emailLabel}</Text>
                                         <TextInput
                                             value={email}
                                             onChangeText={setEmail}
                                             autoCapitalize="none"
                                             keyboardType="email-address"
-                                            placeholder="you@example.com"
+                                            placeholder={t.emailPlaceholder}
                                             placeholderTextColor="#6b7280"
                                             className="w-full h-12 px-4 bg-black/40 border border-white/10 rounded-xl text-white focus:border-indigo-500"
                                         />
                                     </View>
 
                                     <View>
-                                        <Text className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Password</Text>
+                                        <Text className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">{t.passwordLabel}</Text>
                                         <TextInput
                                             value={password}
                                             onChangeText={setPassword}
                                             secureTextEntry
-                                            placeholder="••••••••"
+                                            placeholder={t.passwordPlaceholder}
                                             placeholderTextColor="#6b7280"
                                             className="w-full h-12 px-4 bg-black/40 border border-white/10 rounded-xl text-white focus:border-indigo-500"
                                         />
@@ -225,7 +300,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                             <ActivityIndicator color="white" />
                                         ) : (
                                             <Text className="text-white font-bold text-base">
-                                                {isLogin ? 'Sign In' : 'Sign Up'}
+                                                {isLogin ? t.signIn : t.signUp}
                                             </Text>
                                         )}
                                     </Pressable>
@@ -235,7 +310,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                 <View className="mt-6">
                                     <View className="flex-row items-center mb-4">
                                         <View className="flex-1 h-[1px] bg-white/10" />
-                                        <Text className="mx-4 text-gray-500 text-xs uppercase tracking-wider">Or continue with</Text>
+                                        <Text className="mx-4 text-gray-500 text-xs uppercase tracking-wider">{t.orContinueWith}</Text>
                                         <View className="flex-1 h-[1px] bg-white/10" />
                                     </View>
 
@@ -245,13 +320,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                             className="flex-1 h-12 flex-row items-center justify-center bg-white/5 border border-white/10 rounded-xl active:bg-white/10"
                                         >
                                             <AntDesign name="google" size={20} color="white" />
-                                            <Text className="text-white font-medium ml-2">Google</Text>
+                                            <Text className="text-white font-medium ml-2">{t.google}</Text>
                                         </Pressable>
                                         {Platform.OS === 'ios' && (
                                             isExpoGo ? (
                                                 <View className="flex-1 h-12 flex-row items-center justify-center border border-white/5 rounded-xl opacity-40">
                                                     <AntDesign name="apple" size={16} color="#6b7280" />
-                                                    <Text className="text-gray-500 text-xs ml-2">Apple (dev build only)</Text>
+                                                    <Text className="text-gray-500 text-xs ml-2">{t.appleDevOnly}</Text>
                                                 </View>
                                             ) : (
                                                 <Pressable
@@ -259,7 +334,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                                     className="flex-1 h-12 flex-row items-center justify-center bg-white/5 border border-white/10 rounded-xl active:bg-white/10"
                                                 >
                                                     <AntDesign name="apple" size={20} color="white" />
-                                                    <Text className="text-white font-medium ml-2">Apple</Text>
+                                                    <Text className="text-white font-medium ml-2">{t.apple}</Text>
                                                 </Pressable>
                                             )
                                         )}
@@ -276,10 +351,10 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                                         className="flex-row justify-center items-center space-x-2"
                                     >
                                         <Text className="text-gray-400 text-sm">
-                                            {isLogin ? "Don't have an account?" : "Already have an account?"}
+                                            {isLogin ? t.noAccount : t.haveAccount}
                                         </Text>
                                         <Text className="text-indigo-400 font-bold text-sm">
-                                            {isLogin ? "Sign up" : "Sign in"}
+                                            {isLogin ? t.signUpLink : t.signInLink}
                                         </Text>
                                     </Pressable>
                                 </View>
