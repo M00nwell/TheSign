@@ -17,6 +17,10 @@
   },
   "submit": {
     "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
       "ios": {
         "ascAppId": "6759099643",
         "appleId": "PeaceBlvdGames@gmail.com",

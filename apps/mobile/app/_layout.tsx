@@ -1,7 +1,8 @@
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Slot } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
@@ -11,32 +12,20 @@ import "../global.css";
 export default function Layout() {
     const [session, setSession] = useState<Session | null>(null);
     const [initialized, setInitialized] = useState(false);
-    const segments = useSegments();
-    const router = useRouter();
 
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
+            (_event, session) => {
                 setSession(session);
                 setInitialized(true);
             }
         );
-
         return () => subscription.unsubscribe();
     }, []);
 
-    useEffect(() => {
-        if (!initialized) return;
-
-        // Bypass login for now
-        // const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
-
-        // if (!session && !inAuthGroup) {
-        //     router.replace('/login');
-        // } else if (session && inAuthGroup) {
-        //     router.replace('/');
-        // }
-    }, [session, segments, initialized]);
+    // OAuth deep link callback is handled by app/auth/callback.tsx —
+    // Expo Router matches `the-sign://auth/callback?code=...` to that file,
+    // which exchanges the code and redirects to `/`. No listener needed here.
 
     if (!initialized) {
         return (
@@ -47,8 +36,10 @@ export default function Layout() {
     }
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <Slot />
-        </GestureHandlerRootView>
+        <SafeAreaProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <Slot />
+            </GestureHandlerRootView>
+        </SafeAreaProvider>
     );
 }

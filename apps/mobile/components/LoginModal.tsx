@@ -116,7 +116,10 @@ export default function LoginModal({ isOpen, onClose, onSuccess, language, setLa
             setLoading(true);
             setError(null);
 
-            const redirectUrl = Linking.createURL('/auth/callback');
+            // Use the explicit app scheme so Android/iOS correctly routes the
+            // callback back to this app. Linking.createURL can produce an
+            // exp+... prefix in some Expo build contexts which breaks the redirect.
+            const redirectUrl = 'the-sign://auth/callback';
             const { data, error: signInError } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: redirectUrl, skipBrowserRedirect: true },

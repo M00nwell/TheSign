@@ -144,7 +144,7 @@ export default function Login() {
 
                 <View className="space-y-3">
                     {AUTH_PROVIDERS.map((provider) => {
-                        const iconName = provider.name === 'google' ? 'google' : 'apple1';
+                        const iconName = provider.name === 'google' ? 'google' : 'apple';
                         return (
                             <TouchableOpacity
                                 key={provider.name}

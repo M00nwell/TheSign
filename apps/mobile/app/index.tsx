@@ -1,10 +1,11 @@
-import { View, Text, Pressable, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, Pressable, StatusBar } from 'react-native';
 import { Stack } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import OmenCard from '../components/OmenCard';
 import CardPackage from '../components/CardPackage';
 import { useState, useEffect, useRef } from 'react';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SettingsModal from '../components/SettingsModal';
 import ProfileModal from '../components/ProfileModal';
 import LoginModal from '../components/LoginModal';
@@ -70,6 +71,7 @@ function getAmbientTarget() {
 const ANIM_CONFIG = { duration: 3000, easing: Easing.inOut(Easing.cubic) };
 
 export default function Home() {
+    const insets = useSafeAreaInsets();
     const [language, setLanguage] = useState<'en' | 'zh'>('en');
     const [showSettings, setShowSettings] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
@@ -147,7 +149,7 @@ export default function Home() {
 
 
             {/* Header Buttons */}
-            <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50 }}>
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, paddingTop: insets.top }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
                     <Pressable
                         onPress={() => setShowSettings(true)}
@@ -180,7 +182,7 @@ export default function Home() {
                         )}
                     </View>
                 </View>
-            </SafeAreaView>
+            </View>
 
             {/* Main Content */}
             <View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: -32 }}>
