@@ -14,7 +14,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "The Sign",
+  title: "The Daily Sign",
   description: "Your daily omen awaits.",
 };
 

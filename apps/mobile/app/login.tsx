@@ -94,7 +94,7 @@ export default function Login() {
             <Stack.Screen options={{ headerShown: false }} />
 
             <View className="mb-8 items-center">
-                <Text className="text-5xl font-extrabold text-white mb-2">The Sign</Text>
+                <Text className="text-5xl font-extrabold text-white mb-2">The Daily Sign</Text>
                 <Text className="text-gray-400 text-lg">Welcome back</Text>
             </View>
 

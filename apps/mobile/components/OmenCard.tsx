@@ -472,7 +472,7 @@ const OmenCard = forwardRef<any, OmenCardProps>(({ language }, ref) => {
                                     <View className="w-full h-[1px] bg-indigo-100 my-6" />
 
                                     <View className="items-center">
-                                        <Text className="text-xs text-gray-400 uppercase tracking-widest">The Sign</Text>
+                                        <Text className="text-xs text-gray-400 uppercase tracking-widest">The Daily Sign</Text>
                                     </View>
                                 </>
                             )}

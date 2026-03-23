@@ -9,7 +9,7 @@ import { useUser } from '@/providers/user-provider'
 
 const I18N = {
     en: {
-        title: 'The Sign',
+        title: 'The Daily Sign',
         welcomeBack: 'Welcome back',
         createAccount: 'Create your account',
         emailLabel: 'Email',
@@ -27,7 +27,7 @@ const I18N = {
         continueWith: (label: string) => `Continue with ${label}`,
     },
     zh: {
-        title: 'The Sign',
+        title: 'The Daily Sign',
         welcomeBack: '欢迎回来',
         createAccount: '创建您的账户',
         emailLabel: '邮箱',

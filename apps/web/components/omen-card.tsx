@@ -578,7 +578,7 @@ const OmenCard = forwardRef<OmenCardHandle>(function OmenCard(_, ref) {
                                 <div className="w-full h-[1px] bg-indigo-100 my-6" />
 
                                 <div className="text-center">
-                                    <p className="text-xs text-gray-400 uppercase tracking-widest">The Sign</p>
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest">The Daily Sign</p>
                                 </div>
                             </>
                         )}
